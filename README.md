@@ -12,4 +12,7 @@
 4. 공통 기능 개발시 같이 사용하려면 운영배포가 나가야 함.
 
 ## 개선방안
-1. 커스텀 깃 플로우 도임 할려고함.
+참고링크
+1) https://techblog.gccompany.co.kr/1000%EB%A7%8C-%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-%EC%95%B1%EA%B0%9C%EB%B0%9C%EC%9E%90%EB%93%A4%EC%9D%B4-%EC%82%AC%EC%9A%A9%ED%95%98%EB%8A%94-git-branch-%EC%A0%84%EB%9E%B5-e6fb35820af5
+2) https://pearlluck.tistory.com/754
+1. 위 참고링크들을 토대로 커스텀 깃 플로우를 학습 및 설계 하는것이 목표임.
