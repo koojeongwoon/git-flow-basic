@@ -23,8 +23,21 @@
    4- 공통기능을 어떻게 반영해서 개발할수 있을까?
 
 4. 이를 위해서 브랜치를 아래와 같이 나눔.
-   1) release - 이력만 관리, 수정사항은 발생하지 않음. production 머지 후 TAG를 설정
-   2) development - 개발자들은 이 브랜치를 기준으로 feature를 생성하여 각자 작업 진행합니다.
-   3) feature - 단위 기능을 개발하는 브랜치로 기능 개발이 완료되면 피처단위 QA를 진행한 후 qa 브랜치에 Merge 합니다.
-   4) qa - 통합 QA를 진행하는 브랜치입니다. production 배포 후에 버그가 생겼을 때 긴급 수정하는 브랜치(핫픽스)로도 사용됩니다. -> 이게 좀.. 뭔가 이름이 멋지지 않은데..
-   5) production - 상용배포용으로 사용되며 qa 브랜치를 Merge 합니다. 
+   1) version : 이력관리용 브랜치, 수정사항은 발생하지 않음. release 머지 후 Tag 설정
+   2) develop : 개발자들이 기준으로 삼고, 각자 작업을 위해 feature 브랜치를 따는 브랜치
+   3) feature : 단위 기능을 개발하는 브랜치로 기능 개발이 완료되면 피처단위 QA를 진행한 후 staging 브랜치에 Merge 합니다.
+   4) stage : 통합 QA를 진행하는 브랜치입니다. release 배포 후에 버그가 생겼을 때 긴급 수정하는 브랜치(핫픽스)로도 사용됩니다.
+   5) release : 상용배포용으로 사용되며 staging 브랜치를 Merge 합니다.
+   6) hotfix : 오류 수정을 담당하는 브랜치로 완료되면 피처단위 QA를 진행한 후 staging 브랜치에 Merge 합니다.
+
+5. 작업 절차
+   1) versioin 브랜치 생성
+   2) version 브랜치를 기반으로 develop, staging, release 브랜치 생성
+   3) develop 브랜치에서 각 feature 브랜치 생성
+   4) feature 브랜치에서 작업이 끝나면 피쳐단위 테스트
+   5) staging 브랜치에 합친 후 통합 qa 진행
+   6) 통합 qa 완료 후 staging 브랜치를 release 브랜치에 fast-forward-merge 후 배포
+   7) release 브랜치는 develop 브랜치, version 브랜치에 병합, 각 feature 브랜치 삭제
+   8) version 브랜치 태그 생성
+   9) !!!!! 긴급 수정 발생시 -> release 브랜치를 기반으로 hotfix 브랜치 생성후 단위 qa, staging 브랜치에서 통합 qa 완료되면 동일절차로 병합 및 태깅 -> 왜냐면, 개발이나 이런데서 핫픽스 발생이전에도 뭔가 작업이 이뤄질수 있기떄문에 릴리즈에서 작업.
+   10) 
