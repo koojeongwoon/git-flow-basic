@@ -58,31 +58,32 @@
 추후 추가
 
 ## 자동화 스크립트 적용
-₩₩₩gradle
-
+<pre lang="markdown">
+```kotlin
 val installGitHooks by tasks.registering(Copy::class) {
-	val gitHookDir = file(".git/hooks")
-	val customHookDir = file("hooks")
+    val gitHookDir = file(".git/hooks")
+    val customHookDir = file("hooks")
 
-	// 언제나 복사 (기존 파일이 있어도 최신 내용으로 덮어쓰기)
-	from(customHookDir)
-	into(gitHookDir)
+    // 언제나 복사 (기존 파일이 있어도 최신 내용으로 덮어쓰기)
+    from(customHookDir)
+    into(gitHookDir)
 
-	// 기존 파일과 동일하면 overwrite 안 함, 달라지면 덮어씀 (Gradle Copy 기본 기능)
-	duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    // 기존 파일과 동일하면 overwrite 안 함, 달라지면 덮어씀
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 
-	doLast {
-		println("✅ Git hooks copied from 'hooks/' to '.git/hooks'")
-		fileTree(gitHookDir).forEach {
-			it.setExecutable(true)
-		}
-	}
+    doLast {
+        println("✅ Git hooks copied from 'hooks/' to '.git/hooks'")
+        fileTree(gitHookDir).forEach {
+            it.setExecutable(true)
+        }
+    }
 }
 
 // 주요 task 실행 시 항상 최신 hook 유지
 listOf("build", "test", "bootRun").forEach { taskName ->
-	tasks.named(taskName).configure {
-		dependsOn(installGitHooks)
-	}
+    tasks.named(taskName).configure {
+        dependsOn(installGitHooks)
+    }
 }
-₩₩₩
+```
+</pre>
