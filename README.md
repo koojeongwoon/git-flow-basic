@@ -59,6 +59,8 @@
 
 ## 자동화 스크립트 적용 (스프링부트 기준)
 
+1. 프로젝트를 내려 받은 후 ./gradlew build 실행해줘야 로컬 hook 적용됨.
+2. 결국 .git/hooks 디렉토리 아래 hooks 디렉토리에 있는 파일들이 복사 되어야 한다.
 ### build.gradle.kts
 
 <pre lang="markdown">
@@ -175,6 +177,10 @@ exit 0
 ```
 </pre>
 
+1. .github/workflows 이 디렉토리 아래에 있어야 github Action 으로 등록되고 사용할수 있음.
+2. 중요한것은 1번이라도 성공해야 설정에 등록할수 있음..
+3. 아래 이미지에 밑줄 친곳을 잘 확인하고 등록해야 함..
+
 ### .github/workflows/flow.yml
 <pre lang="markdown">
 ```yml
@@ -202,3 +208,6 @@ jobs:
           fi
 ```
 </pre>
+
+![image](https://github.com/user-attachments/assets/6ee85c4d-8d2b-466a-806c-61dbaf5ffd4a)
+
