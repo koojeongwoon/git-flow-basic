@@ -57,7 +57,10 @@
 ## 충돌 시나리오 대처 방안 마련
 추후 추가
 
-## 자동화 스크립트 적용
+## 자동화 스크립트 적용 (스프링부트 기준)
+
+### build.gradle.kts
+
 <pre lang="markdown">
 ```kotlin
 val installGitHooks by tasks.registering(Copy::class) {
@@ -85,5 +88,117 @@ listOf("build", "test", "bootRun").forEach { taskName ->
         dependsOn(installGitHooks)
     }
 }
+```
+</pre>
+
+### hooks/commit-msg.sh
+<pre lang="markdown">
+```shell
+#!/bin/bash
+
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+BRANCH_NAME=$(git symbolic-ref --short HEAD)
+
+# 커밋 메시지가 이미 prefix (예: feat:) 있으면 패스
+if [[ "$COMMIT_MSG" =~ ^(feat|fix|docs|style|refactor|test|chore): ]]; then
+  exit 0
+fi
+
+# 브랜치 이름 기반 prefix 결정
+if [[ "$BRANCH_NAME" == Feature/* ]]; then
+  PREFIX="feat"
+elif [[ "$BRANCH_NAME" == Fix/* || "$BRANCH_NAME" == Hotfix/* ]]; then
+  PREFIX="fix"
+elif [[ "$BRANCH_NAME" == Docs/* ]]; then
+  PREFIX="docs"
+elif [[ "$BRANCH_NAME" == Refactor/* ]]; then
+  PREFIX="refactor"
+else
+  PREFIX="chore"
+fi
+
+# 커밋 메시지에 prefix 추가
+echo "${PREFIX}: $COMMIT_MSG" > "$COMMIT_MSG_FILE"
+echo "ℹ️ 커밋 메시지에 자동 prefix 추가됨: ${PREFIX}"
+```
+</pre>
+
+### hooks/pre-push.sh
+<pre lang="markdown">
+```shell
+#!/bin/bash
+
+# 현재 브랜치 이름
+BRANCH_NAME=$(git symbolic-ref --short HEAD)
+
+# 브랜치 네이밍 규칙 정규식
+REGEX="^(Production|Development|Feature|Hotfix|Release)(/[a-z0-9\-]+)?$"
+
+# 브랜치 이름 규칙 검사
+if ! [[ "$BRANCH_NAME" =~ $REGEX ]]; then
+  echo "❌ 브랜치 이름이 규칙에 맞지 않습니다: $BRANCH_NAME"
+  echo "👉 올바른 예: Feature/login-form, Hotfix/fix-bug"
+  exit 1
+fi
+
+# === Feature 브랜치 검사 ===
+if [[ "$BRANCH_NAME" == Feature/* ]]; then
+  BASE_BRANCH="Development"
+  BASE_COMMIT=$(git merge-base "$BRANCH_NAME" "$BASE_BRANCH" 2>/dev/null)
+  BASE_HEAD=$(git rev-parse "$BASE_BRANCH" 2>/dev/null)
+
+  if [[ "$BASE_COMMIT" != "$BASE_HEAD" ]]; then
+    echo "❌ [BLOCKED] Feature 브랜치는 Development 브랜치에서 파생되어야 합니다."
+    echo "👉 현재 브랜치: $BRANCH_NAME"
+    exit 1
+  fi
+fi
+
+# === Hotfix 브랜치 검사 ===
+if [[ "$BRANCH_NAME" == Hotfix/* ]]; then
+  BASE_RELEASE=$(git merge-base "$BRANCH_NAME" Release 2>/dev/null || true)
+  BASE_PROD=$(git merge-base "$BRANCH_NAME" Production 2>/dev/null || true)
+
+  HEAD_RELEASE=$(git rev-parse Release 2>/dev/null || echo "")
+  HEAD_PROD=$(git rev-parse Production 2>/dev/null || echo "")
+
+  if [[ "$BASE_RELEASE" != "$HEAD_RELEASE" && "$BASE_PROD" != "$HEAD_PROD" ]]; then
+    echo "❌ [BLOCKED] Hotfix 브랜치는 Release 또는 Production 브랜치에서 파생되어야 합니다."
+    echo "👉 현재 브랜치: $BRANCH_NAME"
+    exit 1
+  fi
+fi
+
+# === 모든 조건 통과 시 푸시 허용 ===
+exit 0
+```
+</pre>
+
+### .github/workflows/flow.yml
+<pre lang="markdown">
+```yml
+name: flow
+
+on:
+  pull_request:
+    branches:
+      - Production
+
+jobs:
+  check-source:
+    name: flow
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if not from release/* or hotfix/*
+        run: |
+          echo "🔍 PR Source Branch: ${{ github.head_ref }}"
+          
+          BRANCH="${{ github.head_ref }}"
+          
+          if [[ ! "$BRANCH" =~ ^(Release$|Hotfix/.*) ]]; then
+            echo "❌ Only Release/* or Hotfix/* branches can merge into production."
+            exit 1
+          fi
 ```
 </pre>
