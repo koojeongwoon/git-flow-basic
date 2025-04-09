@@ -1,9 +1,58 @@
 # git-flow-basic
 
-## 현행 브랜치 관리
-1. 운영, 개발, 개별 작업브랜치로 이루어짐.
-2. 운영브랜치는 배포되어 서비스 중인 브랜치로 볼수 있음.
-3. 운영에서 개별 작업브랜치를 따 개발하고, 그 결과를 개발 통합하여 확인하는 방식
+## 브랜치 목록
+1. Production : 운영중인(배포된) 소스
+2. Development : 개발 소스
+3. QA : 개발 테스트용 소스 (dev)
+4. Release : 통합 QA용 소스 (staging)
+6. Feature : 개별 작업 브랜치
+7. Hotfix : 버그 픽스 브랜치
+
+## 작업 브랜치 네이밍 규칙
+1. [Feature / Hotfix] / [모듈] / [개발자별 Prefix]-[이슈ID]-([기능])
+   - Feature / common / jwkoo-TQ-123-token (공통 모듈 작업)
+   - Hotfix / product / jwkoo-TQ-125-wishlist (상품 모듈 버그 픽스)
+
+## 일반적인 기능개발 시나리오
+1. Development -> Feature Checkout
+   - 모든 개발자는 Development에서 작업브랜치를 딴다.
+3. 기능개발
+4. 개발자 테스트
+5. Feature -> QA (기능 테스트)
+7. Feature -> Development
+   - 해당 Feature 브랜치 삭제(작업 완료. 이후 작업은 버그 수정 작업(Hotfix)으로 생각함.)
+9. Development -> Release (통합 QA)
+10. Release -> Production (Tag 작성 및 배포)
+11. Production -> QA, Development, Release (소스 현행화)
+12. Hotfix 브랜치 삭제 (수정 완료. 배포 이후에 버그는 새로운 버그로 인식함.)
+
+## 버그 픽스
+1. 기능 테스트 시점까지 발견된 버그는 해당 작업브랜치에서 수정후 다시 병합 (Feature -> QA)
+2. 기능 테스트 이후부터 배포 전까지 발견된 버그는 Release -> Hotfix 로 체크아웃 이후 해결한다. (Hotfix -> Release)
+3. 운영중 발생한 버그는 롤백 후 Production -> Hotfix로 체크아웃 이후 해결한다.
+   - 긴급도 하 (일반 기능 이슈) : 해결된 이후 모든 테스트 절차를 거쳐 다시 배포한다. (Release -> Production)
+   - 긴급도 상 (전체 로그인 장애, 결제 장애 등) : 기능 테스트 이후 운영배포한다. 그 이후 소스 현행화 진행한다. (Hotfix -> Production)
+
+## 병합 규칙
+1. 모든 병합은 반드시 PR을 통해서 진행한다.
+2. CI 통과는 필수이다.
+3. 리뷰어 지정은 필수이다.
+4. 최소 1명 이상의 승인이 필수이다.
+5. Rebase는 개인작업중 커밋을 정리한다거나, Feature 브랜치를 최신화 할때 말고는 사용하지 않음.
+
+## 병합 방식
+1. Feature -> QA             : Squash merge       -> 커밋 단순화, 기능단위 정리
+2. Feature -> Development    : Squash merge       -> 커밋 단순화, 기능단위 정리
+3. Development -> Release    : Merge commit       -> QA시 변경점 추적 용이
+4. Release -> Production     : Merge commit       -> 배포 이력 보존
+5. Hotfix -> Release         : Squash 또는 Merge   -> 상황에 따라서 선택
+6. Hotfix -> Production      : Squash 또는 Merge   -> 상황에 따라서 선택
+
+## 브랜치 보호 규칙
+공통 브랜치(Production, Release, QA, Development)는 보호규칙을 설정한다.
+1. Force push 금지.
+2. PR 리뷰 1건 이상 필요.
+3. PR전 머지 충돌이 없어야 함.
 
 ## 현행 브랜치 관리의 문제점
 1. 개별 브랜치의 삭제 시점이 없음.
@@ -11,33 +60,5 @@
 3. 태그를 활용하지 못하고 있음.
 4. 공통 기능 개발시 같이 사용하려면 운영배포가 나가야 함.
 
-## 개선방안
-참고링크
-1) https://techblog.gccompany.co.kr/1000%EB%A7%8C-%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C-%EC%95%B1%EA%B0%9C%EB%B0%9C%EC%9E%90%EB%93%A4%EC%9D%B4-%EC%82%AC%EC%9A%A9%ED%95%98%EB%8A%94-git-branch-%EC%A0%84%EB%9E%B5-e6fb35820af5
-2) https://pearlluck.tistory.com/754
-1. 위 참고링크들을 토대로 커스텀 깃 플로우를 학습 및 설계 하는것이 목표임.
-2. 중요하게 생각하는 것은 몇가지 케이스
-   1- 병합내역을 순차적으로 확인하는것이 용이한가?
-   2- 잘못 병합했을때 유연하게 대처가 가능한가? -> 예를들면 롤백? 재병합?
-   3- 충돌을 해결할때의 편의성??
-   4- 공통기능을 어떻게 반영해서 개발할수 있을까?
-
-4. 이를 위해서 브랜치를 아래와 같이 나눔.
-   1) version : 이력관리용 브랜치, 수정사항은 발생하지 않음. release 머지 후 Tag 설정
-   2) develop : 개발자들이 기준으로 삼고, 각자 작업을 위해 feature 브랜치를 따는 브랜치
-   3) feature : 단위 기능을 개발하는 브랜치로 기능 개발이 완료되면 피처단위 QA를 진행한 후 staging 브랜치에 Merge 합니다.
-   4) stage : 통합 QA를 진행하는 브랜치입니다. release 배포 후에 버그가 생겼을 때 긴급 수정하는 브랜치(핫픽스)로도 사용됩니다.
-   5) release : 상용배포용으로 사용되며 staging 브랜치를 Merge 합니다.
-   6) hotfix : 오류 수정을 담당하는 브랜치로 완료되면 피처단위 QA를 진행한 후 staging 브랜치에 Merge 합니다.
-
-5. 작업 절차
-   1) versioin 브랜치 생성
-   2) version 브랜치를 기반으로 develop, staging, release 브랜치 생성
-   3) develop 브랜치에서 각 feature 브랜치 생성
-   4) feature 브랜치에서 작업이 끝나면 피쳐단위 테스트
-   5) staging 브랜치에 합친 후 통합 qa 진행
-   6) 통합 qa 완료 후 staging 브랜치를 release 브랜치에 fast-forward-merge 후 배포
-   7) release 브랜치는 develop 브랜치, version 브랜치에 병합, 각 feature 브랜치 삭제
-   8) version 브랜치 태그 생성
-   9) !!!!! 긴급 수정 발생시 -> release 브랜치를 기반으로 hotfix 브랜치 생성후 단위 qa, staging 브랜치에서 통합 qa 완료되면 동일절차로 병합 및 태깅 -> 왜냐면, 개발이나 이런데서 핫픽스 발생이전에도 뭔가 작업이 이뤄질수 있기떄문에 릴리즈에서 작업.
-   10) 
+## 충돌 시나리오 대처 방안 마련
+추후 추가
