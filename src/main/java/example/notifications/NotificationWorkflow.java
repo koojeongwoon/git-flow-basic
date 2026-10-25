@@ -70,10 +70,14 @@ public final class NotificationWorkflow {
         afterSnapshot.run();
 
         orders.put(orderId, new Order(accountId, newStatus));
-        if (enabled
-                && !Objects.equals(previousStatus, newStatus)
-                && NOTIFICATION_STATUSES.contains(newStatus)) {
+        if (shouldNotify(enabled, previousStatus, newStatus)) {
             sender.accept(new Mail(accountId, orderId, newStatus));
         }
+    }
+
+    private static boolean shouldNotify(boolean optedIn, String previousStatus, String newStatus) {
+        return optedIn
+                && !Objects.equals(previousStatus, newStatus)
+                && NOTIFICATION_STATUSES.contains(newStatus);
     }
 }
