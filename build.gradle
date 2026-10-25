@@ -1,0 +1,4 @@
+plugins { id 'java' }
+java { toolchain { languageVersion = JavaLanguageVersion.of(25) } }
+dependencies { testImplementation fileTree(dir: System.getenv('SPEC_LINEAGE_JUNIT_LIB_DIR') ?: '/runner/lib', include: ['*.jar']) }
+test { useJUnitPlatform(); maxHeapSize = '128m'; jvmArgs '-XX:ActiveProcessorCount=1' }
